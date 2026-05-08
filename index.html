@@ -23,7 +23,7 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--warm-gray);font-size:16px;pointer-events:none}
 .btn-add{background:var(--sage);color:#fff;border:none;border-radius:24px;padding:9px 20px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.2s}
 .btn-add:hover{background:#3a5332}
-.btn-lock{background:none;border:1px solid var(--border);border-radius:24px;padding:9px 14px;font-size:16px;color:var(--warm-gray);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-size:13px}
+.btn-lock{background:none;border:1px solid var(--border);border-radius:24px;padding:9px 14px;color:var(--warm-gray);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-size:13px}
 .btn-lock:hover{border-color:var(--sage);color:var(--sage)}
 .btn-lock.unlocked{border-color:var(--sage);color:var(--sage);background:var(--sage-light)}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
@@ -32,7 +32,8 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem}
 .recipe-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s}
 .recipe-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
-.card-img{height:150px;display:flex;align-items:center;justify-content:center;font-size:52px;background:var(--sage-light);position:relative}
+.card-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:52px;background:var(--sage-light);position:relative;overflow:hidden}
+.card-img img{width:100%;height:100%;object-fit:cover}
 .card-tag{position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.9);border-radius:12px;padding:3px 10px;font-size:11px;color:var(--warm-gray);font-weight:500}
 .card-body{padding:1rem 1.1rem 1.2rem}
 .card-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;margin-bottom:4px}
@@ -56,13 +57,17 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
 .form-group input,.form-group textarea,.form-group select{width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.2s;resize:vertical}
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--sage)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.emoji-picker{display:flex;gap:8px;flex-wrap:wrap;max-height:120px;overflow-y:auto}
-.emoji-opt{font-size:26px;cursor:pointer;padding:6px;border-radius:8px;border:2px solid transparent;transition:all 0.15s;line-height:1}
-.emoji-opt.selected,.emoji-opt:hover{border-color:var(--sage);background:var(--sage-light)}
+.img-upload-area{border:2px dashed var(--border);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;background:#fff;position:relative}
+.img-upload-area:hover{border-color:var(--sage);background:var(--sage-light)}
+.img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.img-upload-area .upload-icon{font-size:28px;color:var(--warm-gray);margin-bottom:6px}
+.img-upload-area p{font-size:13px;color:var(--warm-gray)}
+.img-preview{width:100%;height:160px;object-fit:cover;border-radius:10px;display:none;margin-top:8px}
 .btn-save{background:var(--sage);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;width:100%;margin-top:0.5rem;transition:background 0.2s}
 .btn-save:hover{background:#3a5332}
 .btn-save:disabled{background:var(--warm-gray);cursor:not-allowed}
-.detail-emoji{font-size:72px;text-align:center;padding:2rem 0 1rem;background:var(--sage-light);border-radius:14px;margin-bottom:1.5rem}
+.detail-hero{width:100%;height:220px;object-fit:cover;border-radius:14px;margin-bottom:1.5rem}
+.detail-hero-placeholder{height:120px;display:flex;align-items:center;justify-content:center;font-size:72px;background:var(--sage-light);border-radius:14px;margin-bottom:1.5rem}
 .detail-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;margin-bottom:6px}
 .detail-meta{font-size:13px;color:var(--warm-gray);display:flex;gap:14px;margin-bottom:1.5rem;flex-wrap:wrap}
 .detail-section{margin-bottom:1.5rem}
@@ -166,8 +171,13 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
       </div>
     </div>
     <div class="form-group">
-      <label>Pick an emoji</label>
-      <div class="emoji-picker" id="emoji-picker"></div>
+      <label>Photo</label>
+      <div class="img-upload-area" id="upload-area">
+        <input type="file" id="f-image" accept="image/*" onchange="previewImage(event)">
+        <div class="upload-icon"><i class="ti ti-photo" aria-hidden="true"></i></div>
+        <p>Click to upload a photo</p>
+      </div>
+      <img id="img-preview" class="img-preview" alt="Preview">
     </div>
     <div class="form-group">
       <label>Ingredients (one per line)</label>
@@ -200,23 +210,34 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
 const SUPABASE_URL = 'https://rakztikspgmnjnzfbubp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJha3p0aWtzcGdtbmpuemZidWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzgyNDIsImV4cCI6MjA5Mzg1NDI0Mn0.VzM5_TONNFihtWuAKU9HdGsS3G_UwP3-kTaO3Z2Uriw';
 const API = `${SUPABASE_URL}/rest/v1/recipes`;
+const STORAGE = `${SUPABASE_URL}/storage/v1/object/recipe-images`;
+const STORAGE_PUBLIC = `${SUPABASE_URL}/storage/v1/object/public/recipe-images`;
 const HEADERS = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`};
 
-// *** CHANGE THIS TO YOUR OWN PASSWORD ***
 const ADMIN_PASSWORD = 'jasminerice';
-
-const EMOJIS = ['🍝','🍜','🍛','🍲','🥘','🍱','🍣','🍤','🥗','🥙','🌮','🌯','🍔','🍕','🥩','🍗','🍖','🥚','🍳','🥞','🧇','🥓','🥐','🍞','🥨','🧀','🥑','🥦','🥕','🌽','🍅','🧅','🧄','🫘','🍋','🍊','🍓','🫐','🍒','🍑','🍰','🎂','🧁','🍮','🍪','🍩','🍫','🍦','🍨','🧃','☕','🍵','🍹','🥤'];
 
 let recipes = [];
 let editId = null;
-let selectedEmoji = '🍝';
 let activeFilter = 'all';
 let isAdmin = false;
+let currentImageFile = null;
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { headers: HEADERS, ...options });
   if (!res.ok) throw new Error(await res.text());
   return options.method === 'DELETE' ? null : res.json();
+}
+
+async function uploadImage(file, recipeId) {
+  const ext = file.name.split('.').pop();
+  const path = `${recipeId}.${ext}`;
+  const res = await fetch(`${STORAGE}/${path}`, {
+    method: 'POST',
+    headers: {'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':file.type,'x-upsert':'true'},
+    body: file
+  });
+  if (!res.ok) throw new Error('Image upload failed');
+  return `${STORAGE_PUBLIC}/${path}`;
 }
 
 async function loadRecipes() {
@@ -251,7 +272,10 @@ function renderGrid() {
   }
   document.getElementById('grid').innerHTML = list.map(r => `
     <div class="recipe-card" onclick="openDetail(${r.id})">
-      <div class="card-img">${r.emoji || '🍽️'}<span class="card-tag">${r.cat}</span></div>
+      <div class="card-img">
+        ${r.image_url ? `<img src="${r.image_url}" alt="${r.name}" loading="lazy">` : '🍽️'}
+        <span class="card-tag">${r.cat}</span>
+      </div>
       <div class="card-body">
         <div class="card-title">${r.name}</div>
         <div class="card-meta">
@@ -261,6 +285,16 @@ function renderGrid() {
         </div>
       </div>
     </div>`).join('');
+}
+
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  currentImageFile = file;
+  const preview = document.getElementById('img-preview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  document.querySelector('#upload-area p').textContent = file.name;
 }
 
 function toggleLock() {
@@ -283,8 +317,7 @@ function closePw() { document.getElementById('pw-modal').classList.remove('open'
 function checkPw() {
   const val = document.getElementById('pw-input').value;
   if (val === ADMIN_PASSWORD) {
-    isAdmin = true;
-    closePw();
+    isAdmin = true; closePw();
     document.getElementById('lock-icon').className = 'ti ti-lock-open';
     document.getElementById('lock-btn').classList.add('unlocked');
     document.getElementById('add-btn').style.display = 'flex';
@@ -296,22 +329,16 @@ function checkPw() {
   }
 }
 
-function buildEmojiPicker() {
-  document.getElementById('emoji-picker').innerHTML = EMOJIS.map(e =>
-    `<span class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="pickEmoji('${e}')">${e}</span>`
-  ).join('');
-}
-
-function pickEmoji(e) { selectedEmoji = e; buildEmojiPicker(); }
-
 function openAdd() {
   if (!isAdmin) return;
-  editId = null; selectedEmoji = '🍝';
+  editId = null; currentImageFile = null;
   document.getElementById('form-title').textContent = 'New recipe';
   ['name','time','servings','ingredients','instructions','notes'].forEach(f => document.getElementById('f-' + f).value = '');
   document.getElementById('f-cat').value = 'dinner';
   document.getElementById('f-diff').value = 'medium';
-  buildEmojiPicker();
+  document.getElementById('f-image').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.querySelector('#upload-area p').textContent = 'Click to upload a photo';
   document.getElementById('add-modal').classList.add('open');
 }
 
@@ -322,26 +349,33 @@ async function saveRecipe() {
   if (!name) { alert('Please enter a recipe name.'); return; }
   const btn = document.getElementById('save-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
-  const data = {
-    name, cat: document.getElementById('f-cat').value,
-    time: document.getElementById('f-time').value,
-    servings: document.getElementById('f-servings').value,
-    diff: document.getElementById('f-diff').value,
-    emoji: selectedEmoji,
-    ingredients: document.getElementById('f-ingredients').value.trim(),
-    instructions: document.getElementById('f-instructions').value.trim(),
-    notes: document.getElementById('f-notes').value.trim()
-  };
   try {
+    let image_url = editId ? (recipes.find(r => r.id === editId)?.image_url || null) : null;
+    const data = {
+      name, cat: document.getElementById('f-cat').value,
+      time: document.getElementById('f-time').value,
+      servings: document.getElementById('f-servings').value,
+      diff: document.getElementById('f-diff').value,
+      ingredients: document.getElementById('f-ingredients').value.trim(),
+      instructions: document.getElementById('f-instructions').value.trim(),
+      notes: document.getElementById('f-notes').value.trim(),
+      image_url
+    };
+    let recipeId = editId;
     if (editId) {
       await apiFetch(`?id=eq.${editId}`, { method: 'PATCH', body: JSON.stringify(data) });
-      showToast('Recipe updated!');
     } else {
-      await apiFetch('', { method: 'POST', body: JSON.stringify(data), headers: {...HEADERS, 'Prefer':'return=minimal'} });
-      showToast('Recipe saved!');
+      const result = await apiFetch('', { method: 'POST', body: JSON.stringify(data), headers: {...HEADERS, 'Prefer':'return=representation'} });
+      recipeId = result[0].id;
     }
+    if (currentImageFile) {
+      btn.textContent = 'Uploading photo…';
+      image_url = await uploadImage(currentImageFile, recipeId);
+      await apiFetch(`?id=eq.${recipeId}`, { method: 'PATCH', body: JSON.stringify({ image_url }) });
+    }
+    showToast(editId ? 'Recipe updated!' : 'Recipe saved!');
     closeAdd(); await loadRecipes();
-  } catch(e) { alert('Error saving recipe. Please try again.'); }
+  } catch(e) { alert('Error saving recipe: ' + e.message); }
   btn.disabled = false; btn.textContent = 'Save recipe';
 }
 
@@ -353,7 +387,7 @@ function openDetail(id) {
       <button class="btn-delete" onclick="deleteRecipe(${r.id})"><i class="ti ti-trash" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Delete</button>
     </div>` : '';
   document.getElementById('detail-content').innerHTML = `
-    <div class="detail-emoji">${r.emoji || '🍽️'}</div>
+    ${r.image_url ? `<img src="${r.image_url}" alt="${r.name}" class="detail-hero">` : `<div class="detail-hero-placeholder">🍽️</div>`}
     <div class="detail-title">${r.name}</div>
     <div class="detail-meta">
       <span><i class="ti ti-tag" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ${r.cat}</span>
@@ -373,7 +407,7 @@ function closeDetail() { document.getElementById('detail-modal').classList.remov
 function openEdit(id) {
   if (!isAdmin) return;
   const r = recipes.find(x => x.id === id); if (!r) return;
-  editId = id; selectedEmoji = r.emoji || '🍝';
+  editId = id; currentImageFile = null;
   document.getElementById('form-title').textContent = 'Edit recipe';
   document.getElementById('f-name').value = r.name;
   document.getElementById('f-cat').value = r.cat;
@@ -383,7 +417,16 @@ function openEdit(id) {
   document.getElementById('f-ingredients').value = r.ingredients || '';
   document.getElementById('f-instructions').value = r.instructions || '';
   document.getElementById('f-notes').value = r.notes || '';
-  buildEmojiPicker();
+  document.getElementById('f-image').value = '';
+  const preview = document.getElementById('img-preview');
+  if (r.image_url) {
+    preview.src = r.image_url;
+    preview.style.display = 'block';
+    document.querySelector('#upload-area p').textContent = 'Click to replace photo';
+  } else {
+    preview.style.display = 'none';
+    document.querySelector('#upload-area p').textContent = 'Click to upload a photo';
+  }
   closeDetail();
   document.getElementById('add-modal').classList.add('open');
 }
