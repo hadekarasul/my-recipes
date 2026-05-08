@@ -250,7 +250,7 @@ function renderGrid() {
     return;
   }
   document.getElementById('grid').innerHTML = list.map(r => `
-    <div class="recipe-card" onclick="openDetail('${r.id}')">
+    <div class="recipe-card" onclick="openDetail(${r.id})">
       <div class="card-img">${r.emoji || '🍽️'}<span class="card-tag">${r.cat}</span></div>
       <div class="card-body">
         <div class="card-title">${r.name}</div>
@@ -349,8 +349,8 @@ function openDetail(id) {
   const r = recipes.find(x => x.id === id); if (!r) return;
   const adminButtons = isAdmin ? `
     <div class="detail-actions">
-      <button class="btn-edit" onclick="openEdit('${r.id}')"><i class="ti ti-edit" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Edit</button>
-      <button class="btn-delete" onclick="deleteRecipe('${r.id}')"><i class="ti ti-trash" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Delete</button>
+      <button class="btn-edit" onclick="openEdit(${r.id})"><i class="ti ti-edit" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Edit</button>
+      <button class="btn-delete" onclick="deleteRecipe(${r.id})"><i class="ti ti-trash" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Delete</button>
     </div>` : '';
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-emoji">${r.emoji || '🍽️'}</div>
