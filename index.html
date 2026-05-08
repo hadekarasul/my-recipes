@@ -23,6 +23,9 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--warm-gray);font-size:16px;pointer-events:none}
 .btn-add{background:var(--sage);color:#fff;border:none;border-radius:24px;padding:9px 20px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.2s}
 .btn-add:hover{background:#3a5332}
+.btn-lock{background:none;border:1px solid var(--border);border-radius:24px;padding:9px 14px;font-size:16px;color:var(--warm-gray);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-size:13px}
+.btn-lock:hover{border-color:var(--sage);color:var(--sage)}
+.btn-lock.unlocked{border-color:var(--sage);color:var(--sage);background:var(--sage-light)}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
 .filter-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--warm-gray);transition:all 0.15s}
 .filter-btn.active,.filter-btn:hover{background:var(--sage-light);border-color:var(--sage);color:var(--sage)}
@@ -72,6 +75,7 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
 .btn-edit:hover{background:var(--sage);color:#fff}
 .btn-delete{background:none;color:var(--warm-gray);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s}
 .btn-delete:hover{border-color:var(--rust);color:var(--rust)}
+.pw-hint{font-size:12px;color:var(--rust);margin-top:6px;display:none}
 </style>
 </head>
 <body>
@@ -87,7 +91,12 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
         <i class="ti ti-search search-icon" aria-hidden="true"></i>
         <input type="text" id="search" placeholder="Search recipes…" oninput="renderGrid()">
       </div>
-      <button class="btn-add" onclick="openAdd()"><i class="ti ti-plus" aria-hidden="true"></i> Add recipe</button>
+      <button class="btn-lock" id="lock-btn" onclick="toggleLock()">
+        <i class="ti ti-lock" id="lock-icon" aria-hidden="true"></i>
+      </button>
+      <button class="btn-add" id="add-btn" onclick="openAdd()" style="display:none">
+        <i class="ti ti-plus" aria-hidden="true"></i> Add recipe
+      </button>
     </div>
   </header>
   <div class="filters" id="filters"></div>
@@ -96,6 +105,22 @@ header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="pw-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <span class="modal-title">Admin access</span>
+      <button class="close-btn" onclick="closePw()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="pw-input" placeholder="Enter your password" onkeydown="if(event.key==='Enter')checkPw()">
+      <div class="pw-hint" id="pw-hint">Incorrect password</div>
+    </div>
+    <button class="btn-save" onclick="checkPw()">Unlock</button>
+  </div>
+</div>
 
 <!-- Add/Edit Modal -->
 <div class="modal-overlay" id="add-modal">
@@ -177,12 +202,16 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const API = `${SUPABASE_URL}/rest/v1/recipes`;
 const HEADERS = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`};
 
+// *** CHANGE THIS TO YOUR OWN PASSWORD ***
+const ADMIN_PASSWORD = 'jasminerice';
+
 const EMOJIS = ['🍝','🍜','🍛','🍲','🥘','🍱','🍣','🍤','🥗','🥙','🌮','🌯','🍔','🍕','🥩','🍗','🍖','🥚','🍳','🥞','🧇','🥓','🥐','🍞','🥨','🧀','🥑','🥦','🥕','🌽','🍅','🧅','🧄','🫘','🍋','🍊','🍓','🫐','🍒','🍑','🍰','🎂','🧁','🍮','🍪','🍩','🍫','🍦','🍨','🧃','☕','🍵','🍹','🥤'];
 
 let recipes = [];
 let editId = null;
 let selectedEmoji = '🍝';
 let activeFilter = 'all';
+let isAdmin = false;
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { headers: HEADERS, ...options });
@@ -193,8 +222,7 @@ async function apiFetch(path, options = {}) {
 async function loadRecipes() {
   try {
     recipes = await apiFetch('?order=created_at.desc');
-    renderFilters();
-    renderGrid();
+    renderFilters(); renderGrid();
   } catch(e) {
     document.getElementById('grid').innerHTML = `<div class="empty"><h3>Couldn't load recipes</h3><p>Check your Supabase connection.</p></div>`;
   }
@@ -218,7 +246,7 @@ function renderGrid() {
   });
   document.getElementById('count').textContent = `${list.length} recipe${list.length !== 1 ? 's' : ''}`;
   if (!list.length) {
-    document.getElementById('grid').innerHTML = `<div class="empty"><h3>${recipes.length ? 'No matches' : 'Your cookbook is empty'}</h3><p>${recipes.length ? 'Try a different search or filter.' : 'Click "Add recipe" to get started.'}</p></div>`;
+    document.getElementById('grid').innerHTML = `<div class="empty"><h3>${recipes.length ? 'No matches' : 'Your cookbook is empty'}</h3><p>${recipes.length ? 'Try a different search or filter.' : 'No recipes yet.'}</p></div>`;
     return;
   }
   document.getElementById('grid').innerHTML = list.map(r => `
@@ -235,6 +263,39 @@ function renderGrid() {
     </div>`).join('');
 }
 
+function toggleLock() {
+  if (isAdmin) {
+    isAdmin = false;
+    document.getElementById('lock-icon').className = 'ti ti-lock';
+    document.getElementById('lock-btn').classList.remove('unlocked');
+    document.getElementById('add-btn').style.display = 'none';
+    showToast('Locked');
+  } else {
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-hint').style.display = 'none';
+    document.getElementById('pw-modal').classList.add('open');
+    setTimeout(() => document.getElementById('pw-input').focus(), 100);
+  }
+}
+
+function closePw() { document.getElementById('pw-modal').classList.remove('open'); }
+
+function checkPw() {
+  const val = document.getElementById('pw-input').value;
+  if (val === ADMIN_PASSWORD) {
+    isAdmin = true;
+    closePw();
+    document.getElementById('lock-icon').className = 'ti ti-lock-open';
+    document.getElementById('lock-btn').classList.add('unlocked');
+    document.getElementById('add-btn').style.display = 'flex';
+    showToast('Welcome back!');
+  } else {
+    document.getElementById('pw-hint').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
 function buildEmojiPicker() {
   document.getElementById('emoji-picker').innerHTML = EMOJIS.map(e =>
     `<span class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="pickEmoji('${e}')">${e}</span>`
@@ -244,6 +305,7 @@ function buildEmojiPicker() {
 function pickEmoji(e) { selectedEmoji = e; buildEmojiPicker(); }
 
 function openAdd() {
+  if (!isAdmin) return;
   editId = null; selectedEmoji = '🍝';
   document.getElementById('form-title').textContent = 'New recipe';
   ['name','time','servings','ingredients','instructions','notes'].forEach(f => document.getElementById('f-' + f).value = '');
@@ -278,16 +340,18 @@ async function saveRecipe() {
       await apiFetch('', { method: 'POST', body: JSON.stringify(data), headers: {...HEADERS, 'Prefer':'return=minimal'} });
       showToast('Recipe saved!');
     }
-    closeAdd();
-    await loadRecipes();
-  } catch(e) {
-    alert('Error saving recipe. Please try again.');
-  }
+    closeAdd(); await loadRecipes();
+  } catch(e) { alert('Error saving recipe. Please try again.'); }
   btn.disabled = false; btn.textContent = 'Save recipe';
 }
 
 function openDetail(id) {
   const r = recipes.find(x => x.id === id); if (!r) return;
+  const adminButtons = isAdmin ? `
+    <div class="detail-actions">
+      <button class="btn-edit" onclick="openEdit('${r.id}')"><i class="ti ti-edit" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Edit</button>
+      <button class="btn-delete" onclick="deleteRecipe('${r.id}')"><i class="ti ti-trash" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Delete</button>
+    </div>` : '';
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-emoji">${r.emoji || '🍽️'}</div>
     <div class="detail-title">${r.name}</div>
@@ -300,16 +364,14 @@ function openDetail(id) {
     ${r.ingredients ? `<div class="detail-section"><h3>Ingredients</h3><ul>${r.ingredients.split('\n').filter(Boolean).map(i=>`<li>${i}</li>`).join('')}</ul></div>` : ''}
     ${r.instructions ? `<div class="detail-section"><h3>Instructions</h3><ol>${r.instructions.split('\n').filter(Boolean).map(s=>`<li>${s}</li>`).join('')}</ol></div>` : ''}
     ${r.notes ? `<div class="detail-section"><h3>Notes</h3><p>${r.notes}</p></div>` : ''}
-    <div class="detail-actions">
-      <button class="btn-edit" onclick="openEdit('${r.id}')"><i class="ti ti-edit" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Edit</button>
-      <button class="btn-delete" onclick="deleteRecipe('${r.id}')"><i class="ti ti-trash" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Delete</button>
-    </div>`;
+    ${adminButtons}`;
   document.getElementById('detail-modal').classList.add('open');
 }
 
 function closeDetail() { document.getElementById('detail-modal').classList.remove('open'); }
 
 function openEdit(id) {
+  if (!isAdmin) return;
   const r = recipes.find(x => x.id === id); if (!r) return;
   editId = id; selectedEmoji = r.emoji || '🍝';
   document.getElementById('form-title').textContent = 'Edit recipe';
@@ -327,12 +389,12 @@ function openEdit(id) {
 }
 
 async function deleteRecipe(id) {
+  if (!isAdmin) return;
   if (!confirm('Delete this recipe?')) return;
   try {
     await apiFetch(`?id=eq.${id}`, { method: 'DELETE' });
     showToast('Recipe deleted.');
-    closeDetail();
-    await loadRecipes();
+    closeDetail(); await loadRecipes();
   } catch(e) { alert('Error deleting recipe.'); }
 }
 
