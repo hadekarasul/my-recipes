@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Recipes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--cream:#faf8f3;--ink:#1a1a18;--sage:#4a6741;--sage-light:#e8efe7;--rust:#b85c3a;--warm-gray:#8a8680;--card-bg:#ffffff;--border:#e8e4de}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+h1,h2,h3{font-family:'Playfair Display',serif}
+.app{max-width:900px;margin:0 auto;padding:0 1.5rem 3rem}
+header{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.logo-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;letter-spacing:-0.5px;color:var(--ink)}
+.logo-sub{font-size:13px;color:var(--warm-gray);font-weight:300;letter-spacing:0.5px;margin-top:2px}
+.header-actions{display:flex;gap:10px;align-items:center}
+.search-wrap{position:relative}
+.search-wrap input{background:var(--card-bg);border:1px solid var(--border);border-radius:24px;padding:8px 16px 8px 38px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);width:200px;outline:none;transition:border-color 0.2s,width 0.2s}
+.search-wrap input:focus{border-color:var(--sage);width:240px}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--warm-gray);font-size:16px;pointer-events:none}
+.btn-add{background:var(--sage);color:#fff;border:none;border-radius:24px;padding:9px 20px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.2s}
+.btn-add:hover{background:#3a5332}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.filter-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--warm-gray);transition:all 0.15s}
+.filter-btn.active,.filter-btn:hover{background:var(--sage-light);border-color:var(--sage);color:var(--sage)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem}
+.recipe-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s}
+.recipe-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+.card-img{height:150px;display:flex;align-items:center;justify-content:center;font-size:52px;background:var(--sage-light);position:relative}
+.card-tag{position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.9);border-radius:12px;padding:3px 10px;font-size:11px;color:var(--warm-gray);font-weight:500}
+.card-body{padding:1rem 1.1rem 1.2rem}
+.card-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;margin-bottom:4px}
+.card-meta{font-size:12px;color:var(--warm-gray);display:flex;gap:10px;align-items:center}
+.dot{width:3px;height:3px;border-radius:50%;background:var(--border);display:inline-block}
+.empty{text-align:center;padding:4rem 2rem;color:var(--warm-gray);grid-column:1/-1}
+.empty h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--ink);margin-bottom:8px}
+.loading{text-align:center;padding:4rem;color:var(--warm-gray);grid-column:1/-1;font-size:14px}
+.count{font-size:13px;color:var(--warm-gray);margin-bottom:1rem}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--cream);border-radius:18px;width:100%;max-width:560px;padding:2rem;margin:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400}
+.close-btn{background:none;border:none;cursor:pointer;color:var(--warm-gray);font-size:22px;line-height:1;padding:4px}
+.close-btn:hover{color:var(--ink)}
+.form-group{margin-bottom:1.2rem}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--warm-gray);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.2s;resize:vertical}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--sage)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.emoji-picker{display:flex;gap:8px;flex-wrap:wrap;max-height:120px;overflow-y:auto}
+.emoji-opt{font-size:26px;cursor:pointer;padding:6px;border-radius:8px;border:2px solid transparent;transition:all 0.15s;line-height:1}
+.emoji-opt.selected,.emoji-opt:hover{border-color:var(--sage);background:var(--sage-light)}
+.btn-save{background:var(--sage);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;width:100%;margin-top:0.5rem;transition:background 0.2s}
+.btn-save:hover{background:#3a5332}
+.btn-save:disabled{background:var(--warm-gray);cursor:not-allowed}
+.detail-emoji{font-size:72px;text-align:center;padding:2rem 0 1rem;background:var(--sage-light);border-radius:14px;margin-bottom:1.5rem}
+.detail-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;margin-bottom:6px}
+.detail-meta{font-size:13px;color:var(--warm-gray);display:flex;gap:14px;margin-bottom:1.5rem;flex-wrap:wrap}
+.detail-section{margin-bottom:1.5rem}
+.detail-section h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:500;margin-bottom:10px;color:var(--sage)}
+.detail-section p,.detail-section li{font-size:14px;line-height:1.7}
+.detail-section ul,.detail-section ol{padding-left:1.2rem}
+.detail-section li{margin-bottom:4px}
+.detail-actions{display:flex;gap:10px;margin-top:1.5rem}
+.btn-edit{background:var(--sage-light);color:var(--sage);border:1px solid var(--sage);border-radius:10px;padding:10px 20px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;flex:1;transition:all 0.15s}
+.btn-edit:hover{background:var(--sage);color:#fff}
+.btn-delete{background:none;color:var(--warm-gray);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s}
+.btn-delete:hover{border-color:var(--rust);color:var(--rust)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-title">My Recipes</div>
+      <div class="logo-sub">a personal cookbook</div>
+    </div>
+    <div class="header-actions">
+      <div class="search-wrap">
+        <i class="ti ti-search search-icon" aria-hidden="true"></i>
+        <input type="text" id="search" placeholder="Search recipes…" oninput="renderGrid()">
+      </div>
+      <button class="btn-add" onclick="openAdd()"><i class="ti ti-plus" aria-hidden="true"></i> Add recipe</button>
+    </div>
+  </header>
+  <div class="filters" id="filters"></div>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"><div class="loading">Loading recipes…</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="form-title">New recipe</span>
+      <button class="close-btn" onclick="closeAdd()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Recipe name</label>
+      <input type="text" id="f-name" placeholder="e.g. Lemon pasta">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Category</label>
+        <select id="f-cat">
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="dinner" selected>Dinner</option>
+          <option value="dessert">Dessert</option>
+          <option value="snack">Snack</option>
+          <option value="drink">Drink</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Time (minutes)</label>
+        <input type="number" id="f-time" placeholder="e.g. 30">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Servings</label>
+        <input type="number" id="f-servings" placeholder="e.g. 4">
+      </div>
+      <div class="form-group">
+        <label>Difficulty</label>
+        <select id="f-diff">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Pick an emoji</label>
+      <div class="emoji-picker" id="emoji-picker"></div>
+    </div>
+    <div class="form-group">
+      <label>Ingredients (one per line)</label>
+      <textarea id="f-ingredients" rows="5" placeholder="2 cups flour&#10;1 tsp salt&#10;3 eggs"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Instructions</label>
+      <textarea id="f-instructions" rows="6" placeholder="Step by step…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <input type="text" id="f-notes" placeholder="Tips, variations, source…">
+    </div>
+    <button class="btn-save" id="save-btn" onclick="saveRecipe()">Save recipe</button>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span></span>
+      <button class="close-btn" onclick="closeDetail()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://rakztikspgmnjnzfbubp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJha3p0aWtzcGdtbmpuemZidWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzgyNDIsImV4cCI6MjA5Mzg1NDI0Mn0.VzM5_TONNFihtWuAKU9HdGsS3G_UwP3-kTaO3Z2Uriw';
+const API = `${SUPABASE_URL}/rest/v1/recipes`;
+const HEADERS = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`};
+
+const EMOJIS = ['🍝','🍜','🍛','🍲','🥘','🍱','🍣','🍤','🥗','🥙','🌮','🌯','🍔','🍕','🥩','🍗','🍖','🥚','🍳','🥞','🧇','🥓','🥐','🍞','🥨','🧀','🥑','🥦','🥕','🌽','🍅','🧅','🧄','🫘','🍋','🍊','🍓','🫐','🍒','🍑','🍰','🎂','🧁','🍮','🍪','🍩','🍫','🍦','🍨','🧃','☕','🍵','🍹','🥤'];
+
+let recipes = [];
+let editId = null;
+let selectedEmoji = '🍝';
+let activeFilter = 'all';
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { headers: HEADERS, ...options });
+  if (!res.ok) throw new Error(await res.text());
+  return options.method === 'DELETE' ? null : res.json();
+}
+
+async function loadRecipes() {
+  try {
+    recipes = await apiFetch('?order=created_at.desc');
+    renderFilters();
+    renderGrid();
+  } catch(e) {
+    document.getElementById('grid').innerHTML = `<div class="empty"><h3>Couldn't load recipes</h3><p>Check your Supabase connection.</p></div>`;
+  }
+}
+
+function renderFilters() {
+  const cats = ['all', ...new Set(recipes.map(r => r.cat))];
+  document.getElementById('filters').innerHTML = cats.map(c =>
+    `<button class="filter-btn ${c === activeFilter ? 'active' : ''}" onclick="setFilter('${c}')">${c === 'all' ? 'All recipes' : c.charAt(0).toUpperCase() + c.slice(1) + 's'}</button>`
+  ).join('');
+}
+
+function setFilter(c) { activeFilter = c; renderFilters(); renderGrid(); }
+
+function renderGrid() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const list = recipes.filter(r => {
+    const matchQ = !q || r.name.toLowerCase().includes(q) || (r.ingredients || '').toLowerCase().includes(q);
+    const matchF = activeFilter === 'all' || r.cat === activeFilter;
+    return matchQ && matchF;
+  });
+  document.getElementById('count').textContent = `${list.length} recipe${list.length !== 1 ? 's' : ''}`;
+  if (!list.length) {
+    document.getElementById('grid').innerHTML = `<div class="empty"><h3>${recipes.length ? 'No matches' : 'Your cookbook is empty'}</h3><p>${recipes.length ? 'Try a different search or filter.' : 'Click "Add recipe" to get started.'}</p></div>`;
+    return;
+  }
+  document.getElementById('grid').innerHTML = list.map(r => `
+    <div class="recipe-card" onclick="openDetail('${r.id}')">
+      <div class="card-img">${r.emoji || '🍽️'}<span class="card-tag">${r.cat}</span></div>
+      <div class="card-body">
+        <div class="card-title">${r.name}</div>
+        <div class="card-meta">
+          ${r.time ? `<span><i class="ti ti-clock" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ${r.time}m</span><span class="dot"></span>` : ''}
+          ${r.servings ? `<span>${r.servings} srv</span><span class="dot"></span>` : ''}
+          <span>${r.diff}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function buildEmojiPicker() {
+  document.getElementById('emoji-picker').innerHTML = EMOJIS.map(e =>
+    `<span class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="pickEmoji('${e}')">${e}</span>`
+  ).join('');
+}
+
+function pickEmoji(e) { selectedEmoji = e; buildEmojiPicker(); }
+
+function openAdd() {
+  editId = null; selectedEmoji = '🍝';
+  document.getElementById('form-title').textContent = 'New recipe';
+  ['name','time','servings','ingredients','instructions','notes'].forEach(f => document.getElementById('f-' + f).value = '');
+  document.getElementById('f-cat').value = 'dinner';
+  document.getElementById('f-diff').value = 'medium';
+  buildEmojiPicker();
+  document.getElementById('add-modal').classList.add('open');
+}
+
+function closeAdd() { document.getElementById('add-modal').classList.remove('open'); }
+
+async function saveRecipe() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Please enter a recipe name.'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const data = {
+    name, cat: document.getElementById('f-cat').value,
+    time: document.getElementById('f-time').value,
+    servings: document.getElementById('f-servings').value,
+    diff: document.getElementById('f-diff').value,
+    emoji: selectedEmoji,
+    ingredients: document.getElementById('f-ingredients').value.trim(),
+    instructions: document.getElementById('f-instructions').value.trim(),
+    notes: document.getElementById('f-notes').value.trim()
+  };
+  try {
+    if (editId) {
+      await apiFetch(`?id=eq.${editId}`, { method: 'PATCH', body: JSON.stringify(data) });
+      showToast('Recipe updated!');
+    } else {
+      await apiFetch('', { method: 'POST', body: JSON.stringify(data), headers: {...HEADERS, 'Prefer':'return=minimal'} });
+      showToast('Recipe saved!');
+    }
+    closeAdd();
+    await loadRecipes();
+  } catch(e) {
+    alert('Error saving recipe. Please try again.');
+  }
+  btn.disabled = false; btn.textContent = 'Save recipe';
+}
+
+function openDetail(id) {
+  const r = recipes.find(x => x.id === id); if (!r) return;
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-emoji">${r.emoji || '🍽️'}</div>
+    <div class="detail-title">${r.name}</div>
+    <div class="detail-meta">
+      <span><i class="ti ti-tag" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ${r.cat}</span>
+      ${r.time ? `<span><i class="ti ti-clock" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ${r.time} min</span>` : ''}
+      ${r.servings ? `<span><i class="ti ti-users" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ${r.servings} servings</span>` : ''}
+      <span><i class="ti ti-flame" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ${r.diff}</span>
+    </div>
+    ${r.ingredients ? `<div class="detail-section"><h3>Ingredients</h3><ul>${r.ingredients.split('\n').filter(Boolean).map(i=>`<li>${i}</li>`).join('')}</ul></div>` : ''}
+    ${r.instructions ? `<div class="detail-section"><h3>Instructions</h3><ol>${r.instructions.split('\n').filter(Boolean).map(s=>`<li>${s}</li>`).join('')}</ol></div>` : ''}
+    ${r.notes ? `<div class="detail-section"><h3>Notes</h3><p>${r.notes}</p></div>` : ''}
+    <div class="detail-actions">
+      <button class="btn-edit" onclick="openEdit('${r.id}')"><i class="ti ti-edit" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Edit</button>
+      <button class="btn-delete" onclick="deleteRecipe('${r.id}')"><i class="ti ti-trash" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Delete</button>
+    </div>`;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function closeDetail() { document.getElementById('detail-modal').classList.remove('open'); }
+
+function openEdit(id) {
+  const r = recipes.find(x => x.id === id); if (!r) return;
+  editId = id; selectedEmoji = r.emoji || '🍝';
+  document.getElementById('form-title').textContent = 'Edit recipe';
+  document.getElementById('f-name').value = r.name;
+  document.getElementById('f-cat').value = r.cat;
+  document.getElementById('f-time').value = r.time || '';
+  document.getElementById('f-servings').value = r.servings || '';
+  document.getElementById('f-diff').value = r.diff;
+  document.getElementById('f-ingredients').value = r.ingredients || '';
+  document.getElementById('f-instructions').value = r.instructions || '';
+  document.getElementById('f-notes').value = r.notes || '';
+  buildEmojiPicker();
+  closeDetail();
+  document.getElementById('add-modal').classList.add('open');
+}
+
+async function deleteRecipe(id) {
+  if (!confirm('Delete this recipe?')) return;
+  try {
+    await apiFetch(`?id=eq.${id}`, { method: 'DELETE' });
+    showToast('Recipe deleted.');
+    closeDetail();
+    await loadRecipes();
+  } catch(e) { alert('Error deleting recipe.'); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadRecipes();
+</script>
+</body>
+</html>
