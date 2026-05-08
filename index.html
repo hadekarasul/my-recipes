@@ -225,14 +225,16 @@ let currentImageFile = null;
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { headers: HEADERS, ...options });
   if (!res.ok) throw new Error(await res.text());
-  return options.method === 'DELETE' ? null : res.json();
+  if (options.method === 'DELETE' || options.method === 'PATCH') return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 async function uploadImage(file, recipeId) {
   const ext = file.name.split('.').pop();
   const path = `${recipeId}.${ext}`;
   const res = await fetch(`${STORAGE}/${path}`, {
-    method: 'POST',
+    method: 'PUT',
     headers: {'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':file.type,'x-upsert':'true'},
     body: file
   });
